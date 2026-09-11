@@ -51,16 +51,15 @@ export interface TranscriptSegment {
 // ─────────────────────────────────────────────
 
 export interface LessonData {
+  id: string;
   title: string;
   subject: string;
   source: VideoSource;
-  /** Legacy field from the old fixed-lag-point prototype. No longer
-   * used to control the product flow — confusion can now happen at
-   * any timestamp, captured live in App state. Left in place only
-   * because other data in lesson.ts may still reference it. */
   lagTimestampSeconds: number;
   transcript: TranscriptSegment[];
 }
+
+export type Lesson = LessonData;
 
 // ─────────────────────────────────────────────
 // Retrieval question

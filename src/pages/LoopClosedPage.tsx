@@ -8,6 +8,7 @@ export default function LoopClosedPage({
   onReturnToLesson,
 }: LoopClosedPageProps) {
   return (
+  <div className="min-h-screen bg-slate-950 text-white">
     <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-8 px-4 py-16 text-center">
       <header className="flex w-full items-center justify-between">
         <span className="text-lg font-bold tracking-wide text-emerald-400">
@@ -36,6 +37,7 @@ export default function LoopClosedPage({
       >
         Return to lesson
       </button>
-    </div>
+       </div>
+  </div>
   );
 }

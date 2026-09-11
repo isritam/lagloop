@@ -33,8 +33,9 @@ export default function RecoveryPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
-      <header className="flex items-center justify-between">
+<div className="min-h-screen bg-slate-950 text-white">
+  <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
+          <header className="flex items-center justify-between">
         <span className="text-lg font-bold tracking-wide text-emerald-400">
           LAGLOOP
         </span>
@@ -94,6 +95,7 @@ export default function RecoveryPage({
       >
         Continue
       </button>
-    </div>
+            </div>
+  </div>
   );
 }

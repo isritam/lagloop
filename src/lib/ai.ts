@@ -209,3 +209,127 @@ export async function askLearningAssistant(
   const parsedJson = extractJsonFromText(text);
   return validateAIRecoveryContent(parsedJson);
 }
+
+export async function generateSuggestedQuestion({
+  transcript,
+  currentTimeSeconds,
+  language,
+}: {
+  transcript: TranscriptSegment[];
+  currentTimeSeconds: number;
+  language: Language;
+}): Promise<string> {
+  if (!GEMINI_API_KEY) {
+    throw new AIRecoveryError(
+      "Missing VITE_GEMINI_API_KEY. Add it to your .env file to enable AI suggestions."
+    );
+  }
+
+  const context = getTranscriptContext(
+    transcript,
+    currentTimeSeconds,
+    45,
+    45
+  );
+
+  const contextText =
+    formatTranscriptContextAsText(context);
+
+  const languageInstruction =
+    language === "hinglish"
+      ? "Write the question naturally in Hinglish, using Latin script."
+      : "Write the question in clear, natural English.";
+
+  const prompt = `
+You are the suggestion engine for LagLoop.
+
+A learner just pressed "I lost the link" while watching a lesson.
+
+Create ONE specific suggested question that the learner could use to describe the conceptual connection they are confused about.
+
+Use ONLY the transcript context below.
+
+Rules:
+- Focus on the ideas closest to the learner's timestamp.
+- The question must be specific to what is being explained.
+- Do not say "What did I miss?"
+- Do not say "Can you explain this?"
+- Do not repeat the lesson title.
+- Ask about a relationship, cause, mechanism, transformation, comparison, or reasoning step.
+- Make it sound like a real student asking a useful question.
+- Keep it under 20 words.
+- Return ONLY the question.
+- Do not use quotation marks.
+- ${languageInstruction}
+
+Learner confusion timestamp:
+${currentTimeSeconds} seconds
+
+Transcript context:
+"""
+${contextText}
+"""
+`.trim();
+
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 80,
+          },
+        }),
+      }
+    );
+  } catch {
+    throw new AIRecoveryError(
+      "Could not reach the AI service. Check your connection."
+    );
+  }
+
+  if (!response.ok) {
+    throw new AIRecoveryError(
+      `The AI service returned an error (${response.status}).`
+    );
+  }
+
+  let payload: unknown;
+
+  try {
+    payload = await response.json();
+  } catch {
+    throw new AIRecoveryError(
+      "The AI service returned an unreadable response."
+    );
+  }
+
+  const text =
+    (payload as any)?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (
+    typeof text !== "string" ||
+    text.trim().length === 0
+  ) {
+    throw new AIRecoveryError(
+      "The AI service returned an empty suggestion."
+    );
+  }
+
+  return text
+    .trim()
+    .replace(/^["']|["']$/g, "");
+}

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { Language } from "../types";
-import { suggestedPhrases } from "../data/recovery";
 import LanguageToggle from "../components/LanguageToggle";
 import ProgressIndicator from "../components/ProgressIndicator";
 
@@ -9,6 +8,7 @@ interface SignalPageProps {
   onLanguageChange: (language: Language) => void;
   isLoading: boolean;
   error: string | null;
+  suggestedPhrase: string;
   onSubmitQuestion: (questionText: string) => void;
 }
 
@@ -17,12 +17,10 @@ export default function SignalPage({
   onLanguageChange,
   isLoading,
   error,
+  suggestedPhrase,
   onSubmitQuestion,
 }: SignalPageProps) {
   const [confusionText, setConfusionText] = useState("");
-
-  const suggestedPhrase = suggestedPhrases[language];
-
   function handleUseSuggestedPhrase() {
     setConfusionText(suggestedPhrase);
   }
@@ -35,6 +33,7 @@ export default function SignalPage({
   }
 
   return (
+  <div className="min-h-screen bg-slate-950 text-white">
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
       <header className="flex items-center justify-between">
         <span className="text-lg font-bold tracking-wide text-emerald-400">
@@ -104,6 +103,7 @@ export default function SignalPage({
       >
         {isLoading ? "Finding the missing connection..." : "Find my missing link"}
       </button>
-    </div>
+   </div>
+  </div>
   );
 }

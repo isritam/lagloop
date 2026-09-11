@@ -1,6 +1,7 @@
 import type { LessonData } from "../types";
 
 export const lesson: LessonData = {
+  id: "matrix-multiplication",
   title: "Matrix multiplication as composition",
   subject: "Essence of Linear Algebra — 3Blue1Brown",
   source: {
