@@ -1,104 +1,81 @@
-import { parallelCircuitsLesson } from '../data/lesson'
+import { lesson } from "../data/lesson";
+import VideoPlayer from "../components/VideoPlayer";
+import TranscriptPanel from "../components/TranscriptPanel";
+import ProgressIndicator from "../components/ProgressIndicator";
 
-type LessonPageProps = {
-  onLostLink: () => void
+interface LessonPageProps {
+  /** Where the player should start when it's created — 0 normally, or
+   * the learner's saved confusion timestamp when returning from
+   * Loop Closed. Not used for anything after the player is created. */
+  startSeconds: number;
+  /** The live playback position, updated continuously by VideoPlayer. */
+  currentTimeSeconds: number;
+  onTimeUpdate: (seconds: number) => void;
+  onLostTheLink: () => void;
 }
 
-export default function LessonPage({ onLostLink }: LessonPageProps) {
-  const lesson = parallelCircuitsLesson
+function formatTimestamp(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+}
+
+export default function LessonPage({
+  startSeconds,
+  currentTimeSeconds,
+  onTimeUpdate,
+  onLostTheLink,
+}: LessonPageProps) {
+  const videoId = lesson.source.type === "youtube" ? lesson.source.videoId : null;
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <div className="mx-auto max-w-3xl">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
+      <header className="flex items-center justify-between">
+        <span className="text-lg font-bold tracking-wide text-emerald-400">
+          LAGLOOP
+        </span>
+        <ProgressIndicator currentScreen="lesson" />
+      </header>
 
-        {/* Header */}
-        <header className="mb-10">
-          <p className="mb-2 text-sm font-medium tracking-widest text-cyan-400">
-            LAGLOOP
-          </p>
-
-          <h1 className="text-3xl font-bold">
-            {lesson.title}
-          </h1>
-
-          <p className="mt-2 text-slate-400">
-            {lesson.subtitle}
-          </p>
-        </header>
-
-        {/* Timeline */}
-        <section className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <div className="mb-4 flex justify-between text-xs text-slate-500">
-            <span>00:00</span>
-            <span>{lesson.duration}</span>
-          </div>
-
-          <div className="relative h-2 rounded-full bg-slate-700">
-            <div className="h-2 w-[39%] rounded-full bg-cyan-500" />
-
-            <div className="absolute left-[39%] top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-slate-900 bg-cyan-400" />
-          </div>
-
-          <p className="mt-4 text-sm text-cyan-400">
-            {lesson.timestamp}
-          </p>
-        </section>
-
-        {/* Transcript */}
-        <section className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Transcript
-          </p>
-
-          <p className="text-lg leading-relaxed text-slate-200">
-            {lesson.transcript}
-          </p>
-        </section>
-
-        {/* Circuit Diagram */}
-        <section className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <p className="mb-6 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Circuit
-          </p>
-
-          <div className="flex items-center justify-center">
-            <div className="flex w-full max-w-md items-center gap-4">
-
-              <div className="h-12 w-12 rounded-full border-2 border-cyan-400 flex items-center justify-center text-xs">
-                +
-              </div>
-
-              <div className="h-px flex-1 bg-slate-600" />
-
-              <div className="flex flex-col gap-6">
-                <div className="h-10 w-24 rounded-lg border-2 border-slate-500 flex items-center justify-center">
-                  2Ω
-                </div>
-
-                <div className="h-10 w-24 rounded-lg border-2 border-slate-500 flex items-center justify-center">
-                  6Ω
-                </div>
-              </div>
-
-              <div className="h-px flex-1 bg-slate-600" />
-
-              <div className="h-12 w-12 rounded-full border-2 border-cyan-400 flex items-center justify-center text-xs">
-                −
-              </div>
-
-            </div>
-          </div>
-        </section>
-
-        {/* Lost Link */}
-        <button
-          onClick={onLostLink}
-          className="w-full rounded-xl bg-cyan-500 px-6 py-4 font-semibold text-slate-950 transition hover:bg-cyan-400"
-        >
-          I lost the link
-        </button>
-
+      <div className="space-y-1">
+        <p className="text-sm font-medium uppercase tracking-wide text-slate-400">
+          {lesson.subject}
+        </p>
+        <h1 className="text-2xl font-bold text-white">{lesson.title}</h1>
       </div>
-    </main>
-  )
+
+      {videoId ? (
+        <VideoPlayer
+          videoId={videoId}
+          title={lesson.title}
+          startSeconds={startSeconds}
+          onTimeUpdate={onTimeUpdate}
+        />
+      ) : (
+        <div className="flex aspect-video w-full items-center justify-center rounded-xl border border-slate-700 bg-slate-800/60 text-slate-400">
+          Video source not available.
+        </div>
+      )}
+
+      <p className="text-sm text-slate-400">
+        Current position:{" "}
+        <span className="font-mono text-slate-200">
+          {formatTimestamp(currentTimeSeconds)}
+        </span>
+      </p>
+
+      <TranscriptPanel
+        transcript={lesson.transcript}
+        currentTimeSeconds={currentTimeSeconds}
+      />
+
+      <button
+        type="button"
+        onClick={onLostTheLink}
+        className="w-full rounded-lg bg-emerald-500 px-6 py-3 text-base font-semibold text-slate-900 shadow-lg shadow-emerald-500/20 transition-colors hover:bg-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+      >
+        I lost the link
+      </button>
+    </div>
+  );
 }
